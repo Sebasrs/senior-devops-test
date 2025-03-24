@@ -60,10 +60,6 @@ module "k8s_operators" {
   source = "./helm/k8s_operators"
 }
 
-module "go_app_helm_charts" {
-  source = "./helm/helm_charts/go_app"
-}
-
 module "rds" {
   source = "./modules/rds-psql"
 
