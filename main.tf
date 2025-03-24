@@ -1,4 +1,5 @@
 # We modularize everything so we actually split every piece of code
+# Networking
 module "vpc" {
   source = "./modules/vpc"
 
@@ -7,6 +8,7 @@ module "vpc" {
   public_subnets  = var.public_subnets
 }
 
+# EKS
 module "iam" {
   source = "./modules/iam"
 
@@ -30,6 +32,8 @@ module "eks" {
   }
 
   cluster_endpoint_public_access = true
+
+  enable_cluster_creator_admin_permissions = true
 
   vpc_id                   = module.vpc.vpc_id
   subnet_ids               = module.vpc.private_subnet_ids
@@ -56,13 +60,36 @@ module "eks" {
   }
 }
 
+resource "kubernetes_config_map" "aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    mapUsers = <<EOF
+- userarn: arn:aws:iam::<aws_account_number>:user/<username>
+  username: <username>
+  groups:
+    - system:masters
+EOF
+  }
+}
+
 module "k8s_operators" {
   source = "./helm/k8s_operators"
 }
 
+module "datadog" {
+  source = "./helm/datadog"
+
+  datadog_api_key = var.datadog_api_key
+}
+
+# Database
 module "rds" {
   source = "./modules/rds-psql"
 
   vpc_cidr_block = var.vpc_cidr_block
-  subnet_ids = module.vpc.private_subnet_ids
+  subnet_ids     = module.vpc.private_subnet_ids
 }

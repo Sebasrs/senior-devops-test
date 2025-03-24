@@ -16,3 +16,5 @@ variable "public_subnets" {
 variable "private_subnets" {
   type = list(string)
 }
+
+variable "datadog_api_key" {}
