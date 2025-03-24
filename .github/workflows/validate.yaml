@@ -1,0 +1,78 @@
+name: 'Terraform Validate'
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    name: Validate terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: terraform validate
+        uses: dflook/terraform-validate@v1
+        id: validate
+        with:
+          workspace: dev
+
+      - name: Validate failed
+        if: ${{ failure() && steps.validate.outputs.failure-reason == 'validate-failed' }}
+        run: echo "terraform validate failed"
+        
+  init:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      workspace: ${{ steps.setvars.outputs.workspace }}
+
+    steps:
+      - name: Set variables
+        id: setvars
+        run: |
+          echo "workspace=dev" >> $GITHUB_OUTPUT
+  
+  plan:
+    needs: init
+    runs-on: ubuntu-latest
+
+    ## Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # Checkout the repository to the GitHub Actions runner
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: <aws_target_region>
+          role-to-assume: arn:aws:iam::<aws_account_number>:role/<github-role-name>
+    
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.10.5
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        run: terraform init -upgrade
+
+      - name: Select Terraform Workspace
+        run: terraform workspace select "${{ needs.init.outputs.workspace }}" || terraform workspace new "${{ needs.init.outputs.workspace }}"
+
+      # Generates an execution plan for Terraform
+      - name: Terraform Plan
+        run: terraform plan -var-file="./environments/${{needs.init.outputs.workspace }}.tfvars"

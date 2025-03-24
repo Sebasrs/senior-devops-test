@@ -1,0 +1,65 @@
+name: 'Terraform Deploy'
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  push:
+    # tag based deployment to use a single trunk branch which is easier to maintain long-term
+    tags:
+      - dev*
+      - qa*
+      - release*
+
+jobs:
+
+  # Sets variables based on the deployment tag
+  init:
+    runs-on: ubuntu-latest
+    outputs:
+      workspace: ${{ steps.setvars.outputs.workspace }}
+
+    steps:
+      - name: Set variables
+        id: setvars
+        run: |
+          if [[ "${{github.ref}}" == refs/tags/release* ]]; then
+            echo "workspace=prod" >> $GITHUB_OUTPUT
+          elif [[ "${{github.ref}}" == refs/tags/qa* ]]; then
+            echo "workspace=qa" >> $GITHUB_OUTPUT
+          else
+            echo "workspace=dev" >> $GITHUB_OUTPUT
+          fi
+
+  terraform_deploy:
+    needs: init
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # We assume there is an AWS role with a trust relationship which allows assume role from GitHub and this repository
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: <aws_target_region>
+          role-to-assume: arn:aws:iam::<aws_account_number>:role/<github-role-name>
+    
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.10.5
+
+      - name: Terraform Init
+        run: terraform init -upgrade
+
+      - name: Select Terraform Workspace
+        run: terraform workspace select "${{ needs.init.outputs.workspace }}" || terraform workspace new "${{ needs.init.outputs.workspace }}"
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var-file="./environments/${{needs.init.outputs.workspace }}.tfvars"
