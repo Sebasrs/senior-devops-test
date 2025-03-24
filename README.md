@@ -18,6 +18,7 @@ Most configuration are already taken care of, we assume you have the following p
 - DataDog Account
 - DataDog API Keys
 - GitHub Secrets (AWS_REGION, AWS_ACCOUNT_ID)
+- We will be using us-east-1 as our default region
 
 ## Steps
 - Fill in all variables in environments with the correct values
