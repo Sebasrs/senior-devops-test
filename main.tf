@@ -68,7 +68,7 @@ resource "kubernetes_config_map" "aws_auth" {
 
   data = {
     mapUsers = <<EOF
-- userarn: arn:aws:iam::<aws_account_number>:role/<github-role-name>
+- userarn: arn:aws:iam::${var.AWS_ACCOUNT_NUMBER}:role/${var.AWS_GITHUB_ROLE_NAME}
   username: <username>
   groups:
     - system:masters
@@ -92,4 +92,13 @@ module "rds" {
 
   vpc_cidr_block = var.vpc_cidr_block
   subnet_ids     = module.vpc.private_subnet_ids
+}
+
+# ECR to push the app
+resource "aws_ecr_repository" "interview-go-app-ecr" {
+  name                 = "interview-go-app"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 }

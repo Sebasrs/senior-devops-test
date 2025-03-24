@@ -2,6 +2,9 @@ tags = {
     test = "test"
 }
 
+AWS_GITHUB_ROLE_NAME = "github_actions_role"
+AWS_ACCOUNT_NUMBER = "22222222222"
+
 app_name = "interview"
 environment = "dev"
 

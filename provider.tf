@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "<aws_target_region>"
+  region = "us-east-1"
 
   # Default tagging for all resources so we don't have to tag each resource if no additional tags needed
   default_tags {
