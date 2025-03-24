@@ -8,9 +8,9 @@ on:
   push:
     # tag based deployment to use a single trunk branch which is easier to maintain long-term
     tags:
-      - dev*
-      - qa*
-      - release*
+      - dev-infrastructue*
+      - qa-infrastructue*
+      - release-infrastructue*
 
 jobs:
 

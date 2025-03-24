@@ -68,7 +68,7 @@ resource "kubernetes_config_map" "aws_auth" {
 
   data = {
     mapUsers = <<EOF
-- userarn: arn:aws:iam::<aws_account_number>:user/<username>
+- userarn: arn:aws:iam::<aws_account_number>:role/<github-role-name>
   username: <username>
   groups:
     - system:masters

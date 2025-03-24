@@ -11,8 +11,9 @@ Resources created
 - RDS Postgres Engine
 
 # Deployment
-Most configuration are already taken care of, we assume you have the following pieces setup:
+Most configuration are already taken care of, we assume you have the following pieces:
 - AWS Account
 - AWS GitHub role setup to be assumede by OIDC
 - DataDog Account
 - DataDog API Keys
+- GitHub Secrets (AWS_REGION, AWS_ACCOUNT_ID)
